@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model items {
+  item_id        Int                   @id @default(autoincrement())
+  item_name      String                @db.VarChar(100)
+  model          String?               @db.VarChar(50)
+  manufacturer   String?               @db.VarChar(50)
+  location       Int?
+  specifications String?               @db.Text
+  item_condition items_item_condition?
+  data_cadastro  DateTime?             @db.Date
+  locations      locations?            @relation(fields: [location], references: [location_id], onDelete: NoAction, onUpdate: NoAction, map: "items_ibfk_1")
+  loans          loans[]
+
+  @@index([location], map: "location")
+}
+
+model loans {
+  loan_id                                     Int        @id @default(autoincrement())
+  item_id                                     Int?
+  sent_to_location                            Int?
+  located_at                                  Int?
+  received_from                               Int?
+  date_lent                                   DateTime?  @db.Date
+  date_returned                               DateTime?  @db.Date
+  items                                       items?     @relation(fields: [item_id], references: [item_id], onDelete: NoAction, onUpdate: NoAction, map: "loans_ibfk_1")
+  locations_loans_sent_to_locationTolocations locations? @relation("loans_sent_to_locationTolocations", fields: [sent_to_location], references: [location_id], onDelete: NoAction, onUpdate: NoAction, map: "loans_ibfk_2")
+  locations_loans_located_atTolocations       locations? @relation("loans_located_atTolocations", fields: [located_at], references: [location_id], onDelete: NoAction, onUpdate: NoAction, map: "loans_ibfk_3")
+  locations_loans_received_fromTolocations    locations? @relation("loans_received_fromTolocations", fields: [received_from], references: [location_id], onDelete: NoAction, onUpdate: NoAction, map: "loans_ibfk_4")
+
+  @@index([item_id], map: "item_id")
+  @@index([located_at], map: "located_at")
+  @@index([received_from], map: "received_from")
+  @@index([sent_to_location], map: "sent_to_location")
+}
+
+model locations {
+  location_id                             Int     @id @default(autoincrement())
+  city                                    String  @db.VarChar(50)
+  items                                   items[]
+  loans_loans_sent_to_locationTolocations loans[] @relation("loans_sent_to_locationTolocations")
+  loans_loans_located_atTolocations       loans[] @relation("loans_located_atTolocations")
+  loans_loans_received_fromTolocations    loans[] @relation("loans_received_fromTolocations")
+}
+
+model users {
+  codigo_id     Int     @id @default(autoincrement())
+  name_user     String? @db.VarChar(80)
+  username      String? @unique(map: "username") @db.VarChar(30)
+  position_job  String? @db.VarChar(50)
+  user_password String? @unique(map: "user_password") @db.VarChar(20)
+  RG            String? @unique(map: "RG") @db.VarChar(12)
+}
+
+enum items_item_condition {
+  bom
+  ruim
+  manutencao
+}
